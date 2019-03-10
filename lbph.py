@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import sys
-#from AudioIO import listen, speak
-#from settings import veronica_notify
-sys.tracebacklimit=None
+
+#sys.tracebacklimit=None
 name=""
 names=[]
 faces=[]
@@ -15,42 +14,35 @@ c=0
 count=0
 labels=[]
 
-face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+face_recognizer = cv2.face.LBPHFaceRecognizer_create() #Local_Binary_Pattern_Histogram
 
 
-def test():
+def train():
     global face_recognizer
     faces,labels=prepare_training_data()
     j=1
-    while j<len(faces):
+    while j<len(faces): #preprocessing_data
         s=str(faces[j])
         if s[1][0]=="0":
-#print (str(j))
-            del faces[j]
+            del faces[j] #removing_unfit_training_data
             j=j-1
         j=j+1
-   # except:
-      #  print("done")
     print(len(faces))
-    #face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-    face_recognizer.train(faces, np.array(labels))
+    face_recognizer.train(faces, np.array(labels)) #training_labeled_data
     cam=cv2.VideoCapture(0)
     time.sleep(2)
     r,img=cam.read()
-    del(cam)
+    del(cam) #Stop_Camera
     cv2.imwrite("/home/duke_senior/Desktop/test/t.jpg",img)
     predict()
     
 
-def train():
-#    speak("training")
- #   veronica_notify("Training")
+def prepare_data():
 	cam=cv2.VideoCapture(0)
 	fx=open("counter.txt", "r")
 	f=fx.readlines()
 	x=int(f[0].strip())
-    #time.sleep(10)
-	for i in range(20):
+	for i in range(20): #Creating_Dataset
 		r,img=cam.read()
 		cv2.imwrite("/home/duke_senior/Desktop/s2/"+str(x)+".jpg",img)
 		x=x+1
@@ -58,28 +50,23 @@ def train():
 	fx.close()
 	fx=open("counter.txt", "w")
 	fx.write(str(x))
-	del(cam)
-    #exit()
+	del(cam) #Stop_Camera
 
 def detect_face(img):
-#convert the test image to gray scale as opencv face detector expects gray images
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #convert the image to gray scale as opencv face detector takes gray images
+
+    face_cascade = cv2.CascadeClassifier('/home/duke_senior/Desktop/lbpcascade_frontalface_improved.xml') #Load OpenCV face detector
+	#I am using LBP Local Binary Pattern(fast)
+	#Alternative: HaarCascade classifier(Slow and Accurate)
+	
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=5)#detect multiscale images(some images may be closer to camera than others)
+	#result is a list of faces
  
-#load OpenCV face detector, I am using LBP which is fast
-#there is also a more accurate but slow: Haar classifier
-    face_cascade = cv2.CascadeClassifier('/home/duke_senior/Desktop/lbpcascade_frontalface_improved.xml')
-    
-#let's detect multiscale images(some images may be closer to camera than others)
-#result is a list of faces
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=5);
- 
-#if no faces are detected then return original img
-    if (len(faces) == 0):
+    if (len(faces) == 0): #if no faces are detected then return original img
         return np.zeros((2,2),dtype='int')
     (x, y, w, h) = faces[0]
  
-#return only the face part of the image
-    return gray[y:y+w, x:x+h], faces[0]
+    return gray[y:y+w, x:x+h], faces[0] #return only the face part of the image
 
 def prepare_training_data():
         """dirs = os.listdir(data_folder_path)
@@ -114,20 +101,18 @@ def predict():
     fx=open("name.txt", "r")
     cont=fx.readlines()
     print(cont[label-1])
- #   veronica_notify("welcome" + name)
-  #  speak("welcome " + name)
     exit()
 
 def login():
 	f=input("1. login\n2.train\n0.Exit")
 	if(f=="1"):
-		test()
+		train()
 	if(f=="2"):
 		pswd=input("password:")
 		if(pswd=="admin123"):
 			fx=open("name.txt", "a")
 			fx.write(name+"\n")
-			train()
+			prepare_data()
 		else:
 			exit()
 	if(f=="0"):
